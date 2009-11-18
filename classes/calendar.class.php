@@ -103,6 +103,54 @@ class cfcal_calendar {
 		return $date;
 	}
 	
+	public function get_pre_date($month, $year) {
+		$month--;
+		if ($month <= 0) {
+			$month = 12;
+			$year--;
+		}
+		return array('month' => $month, 'year' => $year);
+	}
+
+	public function get_post_date($month, $year) {
+		$month++;
+		if ($month > 12) {
+			$month = 1;
+			$year++;
+		}
+		return array('month' => $month, 'year' => $year);
+	}
+	
+	public function get_base_url() {
+		parse_str($_SERVER['QUERY_STRING'], $output);
+		$result = false;
+		if (isset($_GET['month'])) {
+			unset($output['month']);
+		}
+		if (isset($_GET['year'])) {
+			unset($output['year']);
+		}
+		
+		return trim(get_bloginfo('url').substr_replace($_SERVER['REQUEST_URI'], http_build_query($output), strpos($_SERVER['REQUEST_URI'], '?')+1), '?');
+	}
+
+	public function navigation($month, $year) {
+		$pre_navigation = apply_filters('cfcal-build-month-pre-navigation', '', $month, $year);
+		$post_navigation = apply_filters('cfcal-build-month-post-navigation', '', $month, $year);
+		
+		$pre_date = $this->get_pre_date($month, $year);
+		$post_date = $this->get_post_date($month, $year);
+		$pre_month = $pre_date['month'];
+		$pre_year = $pre_date['year'];
+		$post_month = $post_date['month'];
+		$post_year = $post_date['year'];
+		
+		$base_url = $this->get_base_url();
+		
+		$html = $pre_navigation.'<a href="'.$base_url.'&month='.$pre_month.'&year='.$pre_year.'">&laquo;</a> <a href="'.$base_url.'&month='.date('n').'&year='.date('Y').'">Today</a> <a href="'.$base_url.'&month='.$post_month.'&year='.$post_year.'">&raquo;</a>'.$post_navigation;
+		return $html;
+	}
+	
 	public function request_handler() {
 		if (isset($_GET['cfcal_action'])) {
 			switch ($_GET['cfcal_action']) {
@@ -141,8 +189,6 @@ class cfcal_calendar {
 	
 	public function build_month($month = false, $year = false) {
 		$today = date('n-d-Y');
-		$this_year = date('Y');
-		$this_month = date('n');
 		
 		$month = $this->get_date($month, 'm');
 		$year = $this->get_date($year, 'Y');
@@ -152,46 +198,27 @@ class cfcal_calendar {
 		$week_begins = 0;
 		$weekday_order = array();
 		
-		parse_str($_SERVER['QUERY_STRING'], $output);
-		$result = false;
-		if (isset($_GET['month'])) {
-			unset($output['month']);
-		}
-		if (isset($_GET['year'])) {
-			unset($output['year']);
-		}
+		$base_url = $this->get_base_url();
 		
-		$base_url = trim(get_bloginfo('url').substr_replace($_SERVER['REQUEST_URI'], http_build_query($output), strpos($_SERVER['REQUEST_URI'], '?')+1), '?');
-		
-		$pre_month = $month-1;
-		if ($pre_month == 0) {
-			$pre_month = 12;
-		}
-		$pre_year = $year;
-		if ($pre_month == 12) { 
-			$pre_year = $year-1;
-		}
-		$post_month = $month+1;
-		if ($post_month == 13) {
-			$post_month = 1;
-		}
-		$post_year = $year;
-		if ($post_month == 1) { 
-			$post_year = $year+1;
-		}
+		$pre_date = $this->get_pre_date($month, $year);
+		$post_date = $this->get_post_date($month, $year);
+		$pre_month = $pre_date['month'];
+		$pre_year = $pre_date['year'];
+		$post_month = $post_date['month'];
+		$post_year = $post_date['year'];
 		
 		$html = '
 		<table class="widefat cfcal-calendar">
 			<thead>
 				<tr>
 					<td colspan="2" style="text-align:left; vertical-align:middle;">
-						<h3>Today: <a href="'.$base_url.'&month='.$this_month.'&year='.$this_year.'" class="cfcal-today-title">'.date('l F d, Y').'</a></h3>
+						<h3>Today: <a href="'.$base_url.'&month='.date('n').'&year='.date('Y').'" class="cfcal-today-title">'.date('l F d, Y').'</a></h3>
 					</td>
 					<td colspan="3" style="text-align:center; vertical-align:middle;">
 						<h3>'.date('F Y', mktime(0,0,0,$month,1,$year)).'</h3>
 					</td>
-					<td colspan="2" style="text-align:right; vertical-align:middle;">
-						<a href="'.$base_url.'&month='.$pre_month.'&year='.$pre_year.'">&laquo; Previous</a> || <a href="'.$base_url.'&month='.$this_month.'&year='.$this_year.'">Today</a> || <a href="'.$base_url.'&month='.$post_month.'&year='.$post_year.'">Next &raquo;</a>
+					<td colspan="2" style="text-align:right; vertical-align:middle;" class="cfcal-navigation">
+						'.$this->navigation($month, $year).'
 					</td>
 				</tr>
 				<tr>
@@ -217,8 +244,8 @@ class cfcal_calendar {
 					<td colspan="3" style="text-align:center; vertical-align:middle;">
 						<h3>'.date('F Y', mktime(0,0,0,$month,1,$year)).'</h3>
 					</td>
-					<td colspan="2" style="text-align:right; vertical-align:middle;">
-						<a href="'.$base_url.'&month='.$pre_month.'&year='.$pre_year.'">&laquo; Previous</a> || <a href="'.$base_url.'&month='.$this_month.'&year='.$this_year.'">Today</a> || <a href="'.$base_url.'&month='.$post_month.'&year='.$post_year.'">Next &raquo;</a>
+					<td colspan="2" style="text-align:right; vertical-align:middle;" class="cfcal-navigation">
+						'.$this->navigation($month, $year).'
 					</td>
 				</tr>
 			</tfoot>
@@ -286,8 +313,6 @@ class cfcal_calendar {
 		</table>
 		';
 		
-		// echo htmlentities($html);
-		
 		return $html;
 	}
 	
@@ -301,9 +326,12 @@ class cfcal_calendar {
 			$day_text = date('M', mktime(0,0,0,$month,$day,$year)).' ';
 		}
 		
+		$day_title = '<div class="cfcal-day-title-text">'.$day_text.$day.'</div>';
+		$day_title = apply_filters('cfcal-day-title', $day_title, $month, $day, $year);
+		
 		$html .= '
 			<div class="cfcal-day-title">
-				'.$day_text.$day.'
+				'.$day_title.'
 			</div>
 			<div class="cfcal-day-content">
 				'.$this->build_day_content($day, $month, $year).'
@@ -317,10 +345,6 @@ class cfcal_calendar {
 		$day = $this->get_date($day, 'd');
 		$month = $this->get_date($month, 'm');
 		$year = $this->get_date($year, 'Y');
-		
-		// $content .= date('M-d-Y', mktime(0,0,0,$month,$day,$year)).'<br />'.date('D', mktime(0,0,0,$month,$day,$year));
-		// '.date('M-d-Y', mktime(0,0,0,$month,$day,$year)).'<br />
-		// '.date('D', mktime(0,0,0,$month,$day,$year)).'
 		
 		// Content Items array should be formatted:
 		// $content_items = array(
@@ -350,7 +374,7 @@ class cfcal_calendar {
 					foreach ($content_item as $item) {
 						if (isset($item['id']) && isset($item['title']) && isset($item['status'])) {
 							$content .= '
-							<li id="'.$key.'-'.$item['id'].'" class="status-'.$item['status'].' '.$key.'" title="'.$item['title'].'">
+							<li id="'.$key.'-'.$item['id'].'" class="cfcal-status-'.$item['status'].' '.$key.'" title="'.$item['title'].'">
 								'.substr($item['title'],0,20).'&hellip;
 							</li>';
 						}

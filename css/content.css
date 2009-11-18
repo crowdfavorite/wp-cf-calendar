@@ -1,0 +1,156 @@
+.cfcal-calendar td {
+	border:1px solid #D5D5D5;
+}
+.cfcal-calendar thead td,
+.cfcal-calendar tfoot td {
+	background-color:#D5D5D5;
+}
+.cfcal-calendar tbody td {
+	height:160px;
+	padding:0;
+	overflow:hidden;
+}
+.cfcal-today {
+	background-color:#FFFEED;
+}
+.cfcal-today-title {
+	color:#639ABA;
+}
+.cfcal-day-title {
+	text-align:right;
+	background-color:#ECF1FA;
+}
+.cfcal-day-title-text {
+	padding:2px 5px;
+	line-height:18px;
+	vertical-align:middle;
+}
+.cfcal-day-title div {
+	display:inline;
+}
+
+.cfcal-navigation a {
+	background: #eee url('../../../../wp-admin/images/menu-bits.gif') repeat-x scroll left -379px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	border:1px solid #e3e3e3;
+	padding:3px 6px;
+	text-decoration:none;
+	color:#21759B;
+	font-weight:bold;
+	margin-right:1px;
+}
+
+/*
+border-bottom-color:#B8D3E2;
+border-bottom-style:solid;
+border-bottom-width:2px;
+*/
+
+.cfcal-navigation a:hover {
+	color: #d54e21;
+	border-color: #d54321;
+}
+
+.cfcal-navigation a:active {
+	color: #fff !important;
+}
+
+
+
+.cfcal-day-title-open-day img {
+	padding-right:2px;
+	vertical-align:middle;
+	filter:alpha(opacity=50);
+	-moz-opacity:0.5;
+	-khtml-opacity: 0.5;
+	opacity: 0.5;
+}
+
+.cfcal-day-title-open-day img:hover {
+	filter:alpha(opacity=100);
+	-moz-opacity:1;
+	-khtml-opacity: 1;
+	opacity: 1;
+}
+
+.cfcal-day-content {
+	padding:2px;
+	overflow:hidden;
+	height:125px;
+}
+li.cf-posts {
+}
+
+.cfcal-list li {
+	white-space:nowrap;
+	cursor:pointer;
+	margin-bottom:2px;
+	padding:2px;
+	-moz-border-radius: 4px;
+	-khtml-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+.cfcal-list li:hover {
+	background-image:url(../wp-content/plugins/cf-calendar/images/pencil_big_right.png);
+	background-position:center right;
+	background-repeat:no-repeat;
+}
+
+/* Show/Hide Section
+========================= */
+.cfcal-items-showhide {
+	-moz-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	border-radius: 6px;
+	border: 1px solid #D5D5D5; /* 1b1b1b */
+	margin-bottom:15px;
+	padding:5px;
+}
+.cfcal-items-showhide div {
+	display:inline;
+	padding-right:10px;
+}
+
+.cfcal-publish-color,
+.cfcal-draft-color {
+	display:-moz-inline-stack;
+	display:inline-block;
+	width:15px;
+	height:15px;
+	margin-right:5px;
+	-moz-border-radius: 10px;
+	-khtml-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	border: 1px solid #999;
+	vertical-align:middle;
+}
+
+.cfcal-publish-text,
+.cfcal-draft-text {
+	font-weight:bold;
+}
+.cfcal-publish-text a,
+.cfcal-draft-text a {
+	font-weight:normal;
+}
+
+.cfcal-show-status-publish,
+.cfcal-show-status-draft {
+	display:none;
+}
+
+.cfcal-status-publish,
+.cfcal-publish-color {
+	background-color:#CEECC8;
+}
+
+.cfcal-status-draft,
+.cfcal-draft-color {
+	background-color:#F3C8BD;
+}

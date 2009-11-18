@@ -8,6 +8,8 @@ Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
 
+// for proposals: $text = '<div class="cfcal-day-title-new-post"><img src="../'.PLUGINDIR.'/cf-calendar/images/add_icon.png" /></div>'.$text;
+
 // ini_set('display_errors', '1'); ini_set('error_reporting', E_ALL);
 
 // Constants
@@ -47,8 +49,11 @@ function cfcal_request_handler() {
 	}
 	if (!empty($_POST['cf_action'])) {
 		switch ($_POST['cf_action']) {
+			case 'cfcal_post_popup':
+				cfcal_ajax_post_popup($_POST['post_id'], $_POST['cfcal_wheight']);
+				break;
 			case 'cfcal_day_popup':
-				cfcal_ajax_popup($_POST['post_id'], $_POST['cfcal_wheight']);
+				cfcal_ajax_day_popup($_POST['cfcal_month'], $_POST['cfcal_day'], $_POST['cfcal_year'], $_POST['cfcal_wheight']);
 				break;
 
 			// case 'cfcal_update_settings':
@@ -72,88 +77,13 @@ wp_enqueue_script('cfcal_admin_js', trailingslashit(get_bloginfo('url')).'?cf_ac
 
 function cfcal_admin_js() {
 	header('Content-type: text/javascript');
-	?>
-	;(function($) {
-		$(function() {
-			$('.cfcal-list li').click(function() {
-				var _this = $(this);
-				var wheight = Math.floor($(window).height()*0.8);
-				
-				$.post("index.php", {
-					cf_action:"cfcal_day_popup",
-					post_id:_this.attr("id").replace("cf-posts-",""),
-					cfcal_wheight:wheight-20
-				}, function(r) {
-					res = eval("("+r+")");
-					if (res.success != false) {
-						cfcal_popup(res.html, null, wheight);
-					}
-					else {
-						cfcal_popup_error(res.html, res.message);
-					}
-				});
-				
-				return false;
-			});
-		});
-	})(jQuery);
-	<?php
+	echo file_get_contents(CFCAL_DIR.'js/behavior.js');
 	die();
 }
 
 function cfcal_admin_css() {
 	header('Content-type: text/css');
-	?>
-	.cfcal-calendar td {
-		border:1px solid #D5D5D5;
-	}
-	.cfcal-calendar thead td,
-	.cfcal-calendar tfoot td {
-		background-color:#D5D5D5;
-	}
-	.cfcal-calendar tbody td {
-		height:160px;
-		padding:0;
-		overflow:hidden;
-	}
-	.cfcal-today {
-		background-color:#FFFEED;
-	}
-	.cfcal-today-title {
-		color:#639ABA;
-	}
-	.cfcal-day-title {
-		text-align:right;
-		background-color:#ECF1FA;
-		padding:2px 5px;
-	}
-	.cfcal-day-content {
-		padding:2px;
-		overflow:hidden;
-		height:125px;
-	}
-	li.cf-posts {
-		background-color:#CEECC8;
-	}
-	li.status-draft {
-		background-color:#F3C8BD;
-	}
-	.cfcal-list li {
-		white-space:nowrap;
-		cursor:pointer;
-		margin-bottom:2px;
-		padding:2px;
-		-moz-border-radius: 4px;
-		-khtml-border-radius: 4px;
-		-webkit-border-radius: 4px;
-		border-radius: 4px;
-	}
-	.cfcal-list li:hover {
-		background-image:url(../wp-content/plugins/cf-calendar/images/pencil.png);
-		background-position:center right;
-		background-repeat:no-repeat;
-	}
-	<?php
+	echo file_get_contents(CFCAL_DIR.'css/content.css');
 	echo file_get_contents(CFCAL_DIR.'css/popup.css');
 	die();
 }
@@ -210,17 +140,95 @@ function cfcal_save_settings() {
 
 function cfcal_calendar() {
 	global $cfcal_calendar;
-	
 	?>
-	<style type="text/css">
-	</style>
 	<div class="wrap">
 		<?php echo screen_icon().'<h2>Calendar</h2>'; ?>
 		<br /><br />
+		<div class="cfcal-items-showhide">
+			<?php echo apply_filters('cfcal-items-showhide', ''); ?>
+		</div>
 		<?php echo $cfcal_calendar->admin(false, $_GET['month'], $_GET['year']); ?>
 	</div>
 	<?php
 }
+
+function cfcal_build_month_navigation($html, $month = 0, $year = 0) {
+	if ($month == 0 || $year == 0) { return $html; }
+	
+	$items = array();
+	
+	global $wpdb;
+	$query = "SELECT YEAR(post_date) AS `year`, MONTH(post_date) AS `month`, count(ID) as posts FROM $wpdb->posts WHERE post_type = 'post' AND post_status = 'publish' GROUP BY YEAR(post_date), MONTH(post_date) ORDER BY post_date DESC";
+	$key = md5($query);
+	$cache = wp_cache_get('cfcal_build_month_navigation', 'general');
+	if (!isset($cache[$key])) {
+		$results = $wpdb->get_results($query);
+		$cache[$key] = $results;
+		wp_cache_add('cfcal_build_month_navigation', $cache, 'general');
+	}
+	else {
+		$results = $cache[$key];
+	}
+	
+	if (is_array($results) && !empty($results)) {
+		foreach ($results as $result) {
+			$items[$result->year][$result->month]++;
+		}
+	}
+	
+	$items = apply_filters('cfcal_build_month_navigation', $items, $month, $year);
+	// Sort the Array by years
+	krsort($items);
+	if (is_array($items) && !empty($items)) {
+		$html .= '
+		<select class="cfcal-month-navigation">
+			<option value="0">--Select Month--</option>
+		';
+		foreach ($items as $year_num => $months) {
+			if (is_array($months) && !empty($months)) {
+				// Sort the Array by months
+				krsort($months);
+				foreach ($months as $month_num => $count) {
+					$html .= '<option value="'.$year_num.'-'.$month_num.'"'.selected($year_num.'-'.$month_num, $year.'-'.$month, false).'>'.date('F Y', mktime(0,0,0,$month_num,1,$year_num)).'</option>';
+				}
+			}
+		}
+		$html .= '
+		</select>
+		';
+	}
+
+	return $html;
+}
+add_filter('cfcal-build-month-pre-navigation', 'cfcal_build_month_navigation', 10, 3);
+
+function cfcal_items_showhide_drafts($html) {
+	$html .= '
+		<div class="cfcal-draft-showhide">
+			<span class="cfcal-draft-color"></span>
+			<div class="cfcal-draft-text">
+				'.__('Draft Posts:', 'cfcal').' <a class="cfcal-show-status-draft" rel="cfcal-showhide" href="#">'.__('Show', 'cfcal').'</a><a class="cfcal-hide-status-draft" rel="cfcal-showhide" href="#">'.__('Hide', 'cfcal').'</a>
+			</div>
+		</div>
+	';
+	
+	return $html;
+}
+add_filter('cfcal-items-showhide', 'cfcal_items_showhide_drafts');
+
+function cfcal_items_showhide_publish($html) {
+	$html .= '
+		<div class="cfcal-publish-showhide">
+			<span class="cfcal-publish-color"></span>
+			<div class="cfcal-publish-text">
+				'.__('Posts:', 'cfcal').' <a class="cfcal-show-status-publish" rel="cfcal-showhide" href="#">'.__('Show', 'cfcal').'</a><a class="cfcal-hide-status-publish" rel="cfcal-showhide" href="#">'.__('Hide', 'cfcal').'</a>
+			</div>
+		</div>
+	';
+	
+	return $html;
+}
+add_filter('cfcal-items-showhide', 'cfcal_items_showhide_publish', 1);
 
 function cfcal_day_posts($items = array(), $month = 0, $day = 0, $year = 0) {
 	if ($month == 0 || $day == 0 || $year == 0) { return $items; }
@@ -253,7 +261,18 @@ function cfcal_day_posts($items = array(), $month = 0, $day = 0, $year = 0) {
 }
 add_filter('cfcal-day-content', 'cfcal_day_posts', 10, 4);
 
-function cfcal_ajax_popup($post_id = 0, $window_height) {
+function cfcal_day_title($text = '', $month = 0, $day = 0, $year = 0) {
+	if ($month == 0 || $day == 0 || $year == 0) { return $text; }
+
+	$text = '<div class="cfcal-day-title-open-day" onclick="cfcal_open_day('.$month.', '.$day.', '.$year.')"><img src="../'.PLUGINDIR.'/cf-calendar/images/open_icon.png" /></div>'.$text;
+	
+	return $text;
+}
+add_filter('cfcal-day-title', 'cfcal_day_title', 10, 4);
+
+// AJAX Popup Functionality For a Single Post
+
+function cfcal_ajax_post_popup($post_id = 0, $window_height) {
 	if ($post_id == 0) {
 		$ret = new cfcal_message(array(
 			'success' => false,
@@ -264,14 +283,14 @@ function cfcal_ajax_popup($post_id = 0, $window_height) {
 	else {
 		$ret = new cfcal_message(array(
 			'success' => true,
-			'html' => cfcal_popup($post_id, $window_height),
+			'html' => cfcal_post_popup($post_id, $window_height),
 			'message' => null
 		));
 	}
 	$ret->send();
 }
 
-function cfcal_popup($post_id = 0, $window_height) {
+function cfcal_post_popup($post_id = 0, $window_height) {
 	if ($post_id == 0) { return ''; }
 	global $post;
 	$popup_post = new WP_Query(array(
@@ -298,7 +317,7 @@ function cfcal_popup($post_id = 0, $window_height) {
 				<h2>'.get_the_time('F d, Y').'</h2>
 			</div>
 			<div class="cfcal-popup-content" style="max-height:'.floor($window_height).'px; overflow:auto;">
-				<div class="cfcal-popup-title">
+				<div class="cfcal-popup-title cfcal-status-'.get_post_status().'" onclick="window.location = \''.get_edit_post_link(get_the_ID(), 'other').'\'">
 					'.get_the_title().'
 				</div>
 				<div class="cfcal-popup-post-info">
@@ -332,13 +351,84 @@ function cfcal_popup($post_id = 0, $window_height) {
 	return $html;
 }
 
+function cfcal_ajax_day_popup($month = 0, $day = 0, $year = 0, $window_height) {
+	if ($month == 0 || $day == 0 || $year == 0) {
+		$ret = new cfcal_message(array(
+			'success' => false,
+			'html' => '<p>Whoops! No Day Found</p>',
+			'message' => 'month: '.$month.' || day: '.$day.' || year: '.$year
+		));
+	}
+	else {
+		$ret = new cfcal_message(array(
+			'success' => true,
+			'html' => cfcal_day_popup($month, $day, $year, $window_height),
+			'message' => null
+		));
+	}
+	$ret->send();
+}
 
+function cfcal_day_popup($month = 0, $day = 0, $year = 0, $window_height) {
+	$popup_content_array = array();
+	$popup_content_array = apply_filters('cfcal-day-popup', $popup_content_array, $month, $day, $year);
 
+	if (is_array($popup_content_array) && !empty($popup_content_array)) {
+		krsort($popup_content_array);
+		foreach ($popup_content_array as $key => $item) {
+			if (isset($item['title']) && isset($item['class']) && isset($item['onclick'])) {
+				$popup_content .= '
+					<div class="cfcal-popup-title '.$item['class'].'" onclick="'.$item['onclick'].'">
+						'.$item['title'].'
+					</div>
+				';
+			}
+		}
+	}
+	else {
+		$popup_content = __('No content available for ', 'cfcal').date('F d, Y', mktime(0,0,0,$month,$day,$year));
+	}
+	
+	$html .= '
+	<div id="cfcal-popup" class="cfcal-popup">
+		<div class="cfcal-popup-head">
+			<span class="cfcal-popup-close">
+				<a href="#close">Close</a>
+			</span>
+			<h2>'.date('F d, Y', mktime(0,0,0,$month,$day,$year)).'</h2>
+		</div>
+		<div class="cfcal-popup-content" style="max-height:'.floor($window_height).'px; overflow:auto;">
+			'.$popup_content.'
+		</div>
+	</div>
+	';
+	return $html;
+}
 
-
-
-
-
+function cfcal_day_popup_posts($content_array, $month, $day, $year) {
+	global $post;
+	$day_posts = new WP_Query(array(
+		'day' => $day,
+		'monthnum' => $month,
+		'year' => $year,
+		'showposts' => -1
+	));
+	
+	if ($day_posts->have_posts()) {
+		while($day_posts->have_posts()) {
+			$day_posts->the_post();
+			$content_array[get_the_time('U')] = array(
+				'title' => get_the_title(),
+				'class' => 'cfcal-status-'.get_post_status(),
+				'onclick' => 'window.location = \''.get_edit_post_link(get_the_ID(), 'other').'\''
+			);
+		}
+	}
+	wp_reset_query();
+	unset($day_posts);
+	return $content_array;
+}
+add_filter('cfcal-day-popup', 'cfcal_day_popup_posts', 10, 4);
 
 
 
