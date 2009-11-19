@@ -39,10 +39,12 @@
 /*background-color:#CEECC8;*/
 
 .cfcal-popup-title:hover {
-	background-image:url(../wp-content/plugins/cf-calendar/images/pencil_big_right.png);
-	background-position:center right;
-	background-repeat:no-repeat;
 	cursor:pointer;
+}
+
+.cfcal-popup-title a {
+	float:right;
+	padding-top:4px;
 }
 
 .cfcal-popup-edit {

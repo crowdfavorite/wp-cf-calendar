@@ -1,12 +1,18 @@
 ;(function($) {
 	$(function() {
-		$('.cfcal-list li').click(function() {
-			var _this = $(this);
+		$('.cfcal-list li.cfcal-js-open').click(function() {
+			cfcal_open_post($(this));
+			return false;
+		});
+		
+		cfcal_open_post = function(_this) {
+			$.closeDOMWindow();
+			
 			var wheight = Math.floor($(window).height()*0.8);
 			
 			$.post("index.php", {
-				cf_action:"cfcal_post_popup",
-				post_id:_this.attr("id").replace("cf-posts-",""),
+				cf_action:"cfcal_item_popup",
+				post_id:_this.attr("id").split('-')[1],
 				cfcal_wheight:wheight-20
 			}, function(r) {
 				res = eval("("+r+")");
@@ -19,7 +25,7 @@
 			});
 			
 			return false;
-		});
+		};
 
 		cfcal_open_day = function(month, day, year) {
 			var wheight = Math.floor($(window).height()*0.8);
@@ -51,11 +57,11 @@
 			var class_split = this_class.split('-');
 			
 			if (class_split[1] == 'hide') {
-				$('.cfcal-'+_this.attr('class').replace('cfcal-hide-','')).hide();
+				$('.cfcal-'+_this.attr('class').replace('cfcal-hide-','')).slideUp();
 				$('.'+_this.attr('class').replace('cfcal-hide-','cfcal-show-')).show();
 			}
 			else {
-				$('.cfcal-'+this_class.replace('cfcal-show-','')).show();
+				$('.cfcal-'+this_class.replace('cfcal-show-','')).slideDown();
 				$('.'+this_class.replace('cfcal-show-','cfcal-hide-')).show();
 			}
 			
