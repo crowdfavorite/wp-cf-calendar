@@ -194,7 +194,7 @@ function cfcal_day_posts($items = array(), $month = 0, $day = 0, $year = 0) {
 		'day' => $day,
 		'monthnum' => $month,
 		'year' => $year,
-		'showposts' => 3
+		'showposts' => -1
 	));
 	
 	while($day_posts->have_posts()) {

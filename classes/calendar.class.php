@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Class for building and displaying a calendar
+ * in the WordPress Admin.  Functionality in place
+ * to add content via filters
+ *
+ * @package cfcal_calendar
+ */
 class cfcal_calendar {
 	
 	protected $days_of_week = array(
@@ -32,56 +39,6 @@ class cfcal_calendar {
 			'long' => 'Saturday'
 		)
 	);
-	protected $months = array(
-		1 => array(
-			'short' => 'Jan',
-			'long' => 'January'
-		),
-		2 => array(
-			'short' => 'Feb',
-			'long' => 'February'
-		),
-		3 => array(
-			'short' => 'Mar',
-			'long' => 'March'
-		),
-		4 => array(
-			'short' => 'Apr',
-			'long' => 'April'
-		),
-		5 => array(
-			'short' => 'May',
-			'long' => 'May'
-		),
-		6 => array(
-			'short' => 'Jun',
-			'long' => 'June'
-		),
-		7 => array(
-			'short' => 'Jul',
-			'long' => 'July'
-		),
-		8 => array(
-			'short' => 'Aug',
-			'long' => 'August'
-		),
-		9 => array(
-			'short' => 'Sep',
-			'long' => 'September'
-		),
-		10 => array(
-			'short' => 'Oct',
-			'long' => 'October'
-		),
-		11 => array(
-			'short' => 'Nov',
-			'long' => 'November'
-		),
-		12 => array(
-			'short' => 'Dec',
-			'long' => 'December'
-		)
-	);
 	
 	public function __construct() {
 		add_action('init', array($this, 'request_handler'), 11);
@@ -103,6 +60,13 @@ class cfcal_calendar {
 		return $date;
 	}
 	
+	/**
+	 * Take the current month and year, and return the previous month with the proper year
+	 *
+	 * @param string $month - Any month
+	 * @param string $year - Any Year
+	 * @return array - Array of the previous month with the proper year
+	 */
 	public function get_pre_date($month, $year) {
 		$month--;
 		if ($month <= 0) {
@@ -112,6 +76,13 @@ class cfcal_calendar {
 		return array('month' => $month, 'year' => $year);
 	}
 
+	/**
+	 * Take the current month and year, and return the next month with the proper year
+	 *
+	 * @param string $month - Any month
+	 * @param string $year - Any Year
+	 * @return array - Array of the next month with the proper year
+	 */
 	public function get_post_date($month, $year) {
 		$month++;
 		if ($month > 12) {
@@ -121,6 +92,11 @@ class cfcal_calendar {
 		return array('month' => $month, 'year' => $year);
 	}
 	
+	/**
+	 * Get the Base URL string for the Calendar Page
+	 *
+	 * @return void
+	 */
 	public function get_base_url() {
 		parse_str($_SERVER['QUERY_STRING'], $output);
 		$result = false;
@@ -133,7 +109,14 @@ class cfcal_calendar {
 		
 		return trim(get_bloginfo('url').substr_replace($_SERVER['REQUEST_URI'], http_build_query($output), strpos($_SERVER['REQUEST_URI'], '?')+1), '?');
 	}
-
+	
+	/**
+	 * Build the Calendar Navigation with links to the Previous month, the Next month, and a link to the Current month.
+	 *
+	 * @param string $month - Current Month
+	 * @param string $year - Current Year
+	 * @return string - Constructed Navigation for the Calendar
+	 */
 	public function navigation($month, $year) {
 		$pre_navigation = apply_filters('cfcal-build-month-pre-navigation', '', $month, $year);
 		$post_navigation = apply_filters('cfcal-build-month-post-navigation', '', $month, $year);
@@ -174,6 +157,14 @@ class cfcal_calendar {
 		exit;
 	}
 	
+	/**
+	 * Builds the HTML content for the admin screen and returns or echos based on what is set
+	 *
+	 * @param bool $echo - True = will echo content | False = will return content
+	 * @param string $month - Month to display
+	 * @param string $year - Year to display
+	 * @return html - Built Calendar
+	 */
 	public function admin($echo = false, $month, $year) {
 		do_action('cfcal_pre_calendar', $this);
 		
@@ -187,19 +178,31 @@ class cfcal_calendar {
 		}
 	}
 	
+	/**
+	 * Builds the Month content for the month and year passed in.  If no month or year are passed in, it will
+	 * go get the current month and year to display.
+	 *
+	 * @param string $month | (Optional) Month to display
+	 * @param string $year | (Optional) Year to display
+	 * @return string Built HTML Calendar
+	 */
 	public function build_month($month = false, $year = false) {
 		$today = date('n-d-Y');
 		
+		// Check to see if the month and year are set using the get_date function
 		$month = $this->get_date($month, 'm');
 		$year = $this->get_date($year, 'Y');
 		
 		// Get the WP setting for start of week
+		/***** FUTURE DEVELOPMENT *****/
 		// $week_begins = intval(get_option('start_of_week'));
 		$week_begins = 0;
 		$weekday_order = array();
 		
+		// Get the Base URL of the settings page
 		$base_url = $this->get_base_url();
 		
+		// Get the Pre and Post dates needed
 		$pre_date = $this->get_pre_date($month, $year);
 		$post_date = $this->get_post_date($month, $year);
 		$pre_month = $pre_date['month'];
@@ -223,6 +226,7 @@ class cfcal_calendar {
 				</tr>
 				<tr>
 					';
+					// Display the days of the week in td's
 					$count_dow = count($this->days_of_week);
 					for ($i = 0; $i < $count_dow; $i++){
 						$position = $i+$week_begins;
@@ -260,6 +264,8 @@ class cfcal_calendar {
 		$tracking = 0;
 		
 		for ($day = 1; $day <=$maxday; $day++) {
+			// Checking to see if the first day of the month falls on the first day of the week being displayed
+			// If not, we need to add days from the previous month here
 			if ($pad > 0 && $day == 1) {
 				$html .= '<tr>';
 				$pre_timestamp = mktime(0,0,0,$pre_month,1,$pre_year);
@@ -275,22 +281,29 @@ class cfcal_calendar {
 					$tracking++;
 				}
 			}
+			// Adding tr's where neccesary 
 			else if (($tracking % 7) == 0) { 
 				$html .= '<tr>';
 			}
+
+			// Checking to see if the day being build is Today.  If so give it a special class
 			$today_class = '';
 			$day_text = $month.'-'.$day.'-'.$year;
 			if ($today == $day_text) {
 				$today_class = ' cfcal-today';
 			}
 			
+			// Build the day for the current month
 			$html .= '<td class="cfcal-day'.$today_class.'" style="width:14.25%;">'.$this->build_day($day, $month, $year).'</td>';
-
+			
+			// Adding tr's where neccesary 
 			if (($tracking % 7) == 6) { 
 				$html .= '</tr>';
 			}
 			$tracking++;
-
+			
+			// Checking to see if the last day of the month falls on the last day of the week being displayed
+			// If not, fill in with days from the next month
 			if ($day == $maxday) {
 				if (($tracking % 7) > 0) {
 					$ending = 7 - ($tracking % 7);
@@ -316,19 +329,33 @@ class cfcal_calendar {
 		return $html;
 	}
 	
+	/**
+	 * Builds the day content using 2 separate divs.  The Day Title div will display the day number, and any additional content filtered
+	 * in.  The Day Content div will display the day content from the build_day_content function
+	 *
+	 * @param string $day - Day to display
+	 * @param string $month - Month the day is in
+	 * @param string $year - Year the month and day are in
+	 * @return string - Built Day Content
+	 */
 	public function build_day($day = false, $month = false, $year = false) {
+		// Check to see if the Day/Month/Year have been passed in
 		$day = $this->get_date($day, 'd');
 		$month = $this->get_date($month, 'm');
 		$year = $this->get_date($year, 'Y');
 		
+		// Add the Shortened Month Name if it is the first day of the month
 		$day_text = '';
 		if ($day == 1) {
 			$day_text = date('M', mktime(0,0,0,$month,$day,$year)).' ';
 		}
 		
+		// Build the day title, with the month text if it exists, and the day text.  Then filter in content
+		// from external sources
 		$day_title = '<div class="cfcal-day-title-text">'.$day_text.$day.'</div>';
 		$day_title = apply_filters('cfcal-day-title', $day_title, $month, $day, $year);
 		
+		// Build the day
 		$html .= '
 			<div class="cfcal-day-title">
 				'.$day_title.'
@@ -341,7 +368,17 @@ class cfcal_calendar {
 		return $html;
 	}
 	
+	/**
+	 * Builds the day content for a specific day.  Day items are passed in via filter and displayed as Unordered lists.  Arrays
+	 * passed in should have the format listed in the function
+	 *
+	 * @param string $day - Day to display
+	 * @param string $month - Month the day is in
+	 * @param string $year - Year the month and day are in
+	 * @return string - Built Day Content
+	 */
 	public function build_day_content($day = false, $month = false, $year = false) {
+		// Check to see if the Day/Month/Year have been passed in
 		$day = $this->get_date($day, 'd');
 		$month = $this->get_date($month, 'm');
 		$year = $this->get_date($year, 'Y');
@@ -366,15 +403,22 @@ class cfcal_calendar {
 		// );
 		//
 		
+		// Filter in the items
 		$content_items = array();
 		$content_items = apply_filters('cfcal-day-content', $content_items, $month, $day, $year);
 		
+		// Only display a set number of items so it doesn't mess up the display
+		$i = 0;
+		$i_to_show = 6;
+		
+		// Build the content list
 		if (is_array($content_items) && !empty($content_items)) {
 			$content .= '<ul class="cfcal-list">';
 			// Sort the array so everything is in chronological order
 			krsort($content_items);
 			foreach ($content_items as $key => $item) {
 				if (isset($item['id']) && isset($item['title']) && isset($item['status'])) {
+					if ($i == $i_to_show) { break; }
 					$title = $item['title'];
 					if (strlen($title) > 20) {
 						$title = substr($title,0,20).'&hellip;';
@@ -385,7 +429,16 @@ class cfcal_calendar {
 						<a class="cfcal-day-edit-link" href="'.$item['edit'].'"><img src="../'.PLUGINDIR.'/cf-calendar/images/pencil.png" /></a><span class="hide-if-no-js">'.$title.'</span><a href="'.$item['edit'].'" class="hide-if-js">'.$title.'</a>
 						<div class="clear"></div>
 					</li>';
+					$i++;
 				}
+			}
+			// If there are more items than space allows for, display the more link that will open the day in the popup window
+			if (count($content_items) > $i_to_show) {
+				$content .= '
+				<li id="cfcal-'.$month.'-'.$day.'-more" class="cfcal-day-more hide-if-no-js" onclick="cfcal_open_day('.zeroise($month, 2).', '.zeroise($day, 2).', '.zeroise($year, 2).')">
+					<span>'.__('More', 'cfcal').'&hellip;</span>
+				</li>
+				';
 			}
 			$content .= '</ul>';
 		}

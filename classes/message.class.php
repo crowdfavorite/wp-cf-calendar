@@ -5,7 +5,7 @@
  * consistent handling of json return messages 
  * across the system.
  *
- * @package cfcal_build
+ * @package cfcal_calendar
  */
 class cfcal_message {
 	private $_html;
