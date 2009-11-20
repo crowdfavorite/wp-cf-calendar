@@ -166,8 +166,16 @@ li.cf-posts {
 .cfcal-publish-color {
 	background-color:#CEECC8;
 }
+.cfcal-status-publish:hover,
+.cfcal-publish-color:hover {
+	background-color:#9EB899;
+}
 
 .cfcal-status-draft,
 .cfcal-draft-color {
 	background-color:#F3C8BD;
+}
+.cfcal-status-draft:hover,
+.cfcal-draft-color:hover {
+	background-color:#B68B81;
 }
