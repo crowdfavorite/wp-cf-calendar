@@ -1,7 +1,11 @@
 ;(function($) {
 	$(function() {
-		$('.cfcal-list li.cfcal-js-open').click(function() {
+		$('.cfcal-list li.cfcal-js-open').click(function(evt) {
+			evt.stopPropagation();
+			evt.preventDefault();
 			cfcal_open_post($(this));
+		}).find('.cfcal-day-edit-link').click(function(){
+			window.location = $(this).attr('href');
 			return false;
 		});
 		
@@ -76,12 +80,11 @@
 			var date_val = _this.val().split('-');
 			var url_main = window.location.href.split('?')[0];
 			var url_get = window.location.search.split('&');
-			
 			var page = '';
 			var month = '';
 			var year = '';
 			var other = '';
-			
+
 			$.each(url_get, function(i, val) {
 				if (val[0] == '?') {
 					page = val;
@@ -99,6 +102,14 @@
 					}
 				}
 			});
+			
+			// If the month and year have not been set (they were emtpy to being with), then set them now
+			if (month == '') {
+				month = '&month='+date_val[1];
+			}
+			if (year == '') {
+				year = '&year='+date_val[0];
+			}
 			
 			// Send the window to the new location
 			window.location.href = url_main+page+month+year+other;

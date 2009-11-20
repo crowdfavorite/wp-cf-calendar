@@ -85,50 +85,8 @@ class cfcal_calendar {
 	
 	public function __construct() {
 		add_action('init', array($this, 'request_handler'), 11);
-		add_action('edit_user_profile', array($this, 'author_settings'), 99);
-		add_action('show_user_profile', array($this, 'author_settings'), 99);
-		add_action('profile_update', array($this, 'profile_updated'));
-		
 		
 		wp_enqueue_script('cfcal-admin-js',get_bloginfo('siteurl').'/wp-admin/index.php?cfcal_action=cfcal_admin_js',array('jquery'),CFCAL_VERSION);
-	}
-	
-	public function author_settings() {
-		global $user_id;
-
-		$calendar_link = get_usermeta($user_id, '_cfcal_calendar_link');
-
-		$calendar_link_value = '';
-		if ($calendar_link == 'on') {
-			$calendar_link_value = ' checked="checked"';
-		}
-		?>
-		<h3>CF Calendar Settings</h3>
-		<table class="form-table">
-			<tr id="cfcal-link-setting">
-				<th>
-					<label for="cfcal-link-setting-value">
-						Calendar Items:
-					</label>
-				</th>
-				<td>
-					<input type="checkbox" name="cfcal-link-setting-value" id="cfcal-link-setting-value" <?php echo $calendar_link_value; ?> /> Open Edit Screen
-					<br />
-					When Checked, all posts in the calendar will link directly to the Edit post screen.
-				</td>
-			</tr>
-		</table>
-		<?php
-	}
-	
-	public function profile_updated() {
-		global $user_id;
-		
-		$result = 'off';
-		if (isset($_POST['cfcal-link-setting-value']) && $_POST['cfcal-link-setting-value'] == 'on') {
-			$result = 'on';
-		}
-		update_usermeta($user_id, '_cfcal_calendar_link', $result);
 	}
 	
 	/**
@@ -384,7 +342,6 @@ class cfcal_calendar {
 	}
 	
 	public function build_day_content($day = false, $month = false, $year = false) {
-		global $current_user;
 		$day = $this->get_date($day, 'd');
 		$month = $this->get_date($month, 'm');
 		$year = $this->get_date($year, 'Y');
@@ -411,7 +368,6 @@ class cfcal_calendar {
 		
 		$content_items = array();
 		$content_items = apply_filters('cfcal-day-content', $content_items, $month, $day, $year);
-		$calendar_link = get_usermeta($current_user->ID, '_cfcal_calendar_link');
 		
 		if (is_array($content_items) && !empty($content_items)) {
 			$content .= '<ul class="cfcal-list">';
@@ -419,16 +375,15 @@ class cfcal_calendar {
 			krsort($content_items);
 			foreach ($content_items as $key => $item) {
 				if (isset($item['id']) && isset($item['title']) && isset($item['status'])) {
-					$title = '<span class="hide-if-no-js">'.substr($item['title'],0,20).'&hellip</span><a href="'.$item['edit'].'" class="hide-if-js">'.substr($item['title'],0,20).'&hellip;</a>';
-					$js_open = ' cfcal-js-open';
-					if ($calendar_link == 'on') {
-						$title = '<a href="'.$item['edit'].'">'.substr($item['title'],0,20).'&hellip;</a>';
-						$js_open = '';
+					$title = $item['title'];
+					if (strlen($title) > 20) {
+						$title = substr($title,0,20).'&hellip;';
 					}
-
+					
 					$content .= '
-					<li id="'.$key.'-'.$item['id'].'" class="cfcal-status-'.$item['status'].' '.$item['type'].$js_open.'" title="'.$item['title'].'">
-						'.$title.'
+					<li id="'.$key.'-'.$item['id'].'" class="cfcal-status-'.$item['status'].' '.$item['type'].' cfcal-js-open" title="'.$item['title'].'">
+						<a class="cfcal-day-edit-link" href="'.$item['edit'].'"><img src="../'.PLUGINDIR.'/cf-calendar/images/pencil.png" /></a><span class="hide-if-no-js">'.$title.'</span><a href="'.$item['edit'].'" class="hide-if-js">'.$title.'</a>
+						<div class="clear"></div>
 					</li>';
 				}
 			}
