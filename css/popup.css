@@ -24,7 +24,7 @@
 }
 
 .cfcal-popup-content {
-	margin:20px;
+	padding:20px;
 }
 
 .cfcal-popup-title {
@@ -49,7 +49,7 @@
 
 .cfcal-popup-edit {
 	padding:10px 10px 10px 30px;
-	margin-top:10px;
+	margin:10px 0;
 	background-image:url(../wp-content/plugins/cf-calendar/images/pencil_big_left.png);
 	background-position:center left;
 	background-repeat:no-repeat;
