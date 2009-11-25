@@ -1,6 +1,7 @@
 table.cfcal-calendar {
 	border:1px solid #aaa;
 	border-collapse:collapse;
+	table-layout:fixed;
 }
 .cfcal-calendar tr td {
 	border:1px solid #aaa;
