@@ -9,7 +9,6 @@
 }
 .cfcal-popup-close {
 	float:right;
-	padding:12px 14px;
 }
 .cfcal-popup-head {
 	background-color:#DFDFDF;
@@ -20,7 +19,10 @@
 	-khtml-border-top-left-radius: 3px;
 	border-top-right-radius: 3px;
 	border-top-left-radius: 3px;
-	padding:9px 12px;
+	padding:16px 20px;
+}
+.cfcal-popup-head h2 {
+	margin:0;
 }
 
 .cfcal-popup-content {
@@ -43,22 +45,26 @@
 }
 
 .cfcal-popup-title a {
-	float:right;
+/*	float:right;
 	padding-top:4px;
-}
+*/}
 
 .cfcal-popup-edit {
-	padding:10px 10px 10px 30px;
-	margin:10px 0;
-	background-image:url(../wp-content/plugins/cf-calendar/images/pencil_big_left.png);
-	background-position:center left;
-	background-repeat:no-repeat;
-	border:1px solid #D5D5D5;
+	border-top:1px solid #ddd;
+	margin-top:10px;
+	padding-top:10px;
+}
+.cfcal-popup-edit a {
+	background:url(../wp-content/plugins/cf-calendar/images/pencil_big_left.png) no-repeat left center;
+	padding-left:30px;
 }
 
 .cfcal-popup-post-info div {
 	margin-bottom:5px;
 }
 .cfcal-popup-post-info span.description {
-	color:#C4C4C4;
+	color:#777;
+	display:-moz-inline-stack;
+	display:inline-block;
+	width:10em;
 }

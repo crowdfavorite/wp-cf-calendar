@@ -234,7 +234,7 @@ class cfcal_calendar {
 							$position = $position-($count_dow);
 						}
 						$html .= '
-						<td style="text-align:center;" style="width:14.25%;">'.$this->days_of_week[$position]['short'].'</td>
+						<th style="text-align:center;" style="width:14.25%;">' . $this->days_of_week[$position]['short'] . '</th>
 						';
 						$weekday_order[] = $position;
 					}
@@ -243,14 +243,14 @@ class cfcal_calendar {
 			</thead>
 			<tfoot>
 				<tr>
-				<td colspan="2" style="text-align:left; vertical-align:middle; border-right:0;">
-				</td>
-				<td colspan="3" style="text-align:center; vertical-align:middle; border-left:0; border-right:0;">
-					<h3>'.date('F Y', mktime(0,0,0,$month,1,$year)).'</h3>
-				</td>
-				<td colspan="2" style="text-align:right; vertical-align:middle; border-left:0;" class="cfcal-navigation">
-					'.$this->navigation($month, $year).'
-				</td>
+					<td colspan="2" style="text-align:left; vertical-align:middle; border-right:0;">
+					</td>
+					<td colspan="3" style="text-align:center; vertical-align:middle; border-left:0; border-right:0;">
+						<h3>'.date('F Y', mktime(0,0,0,$month,1,$year)).'</h3>
+					</td>
+					<td colspan="2" style="text-align:right; vertical-align:middle; border-left:0;" class="cfcal-navigation">
+						'.$this->navigation($month, $year).'
+					</td>
 				</tr>
 			</tfoot>
 		';
@@ -426,8 +426,7 @@ class cfcal_calendar {
 					
 					$content .= '
 					<li id="'.$key.'-'.$item['id'].'" class="cfcal-status-'.$item['status'].' '.$item['type'].' cfcal-js-open" title="'.$item['title'].'">
-						<a class="cfcal-day-edit-link" href="'.$item['edit'].'"><img src="../'.PLUGINDIR.'/cf-calendar/images/pencil.png" /></a><span class="hide-if-no-js">'.$title.'</span><a href="'.$item['edit'].'" class="hide-if-js">'.$title.'</a>
-						<div class="clear"></div>
+						<a class="cfcal-day-edit-link" href="'.$item['edit'].'"><img src="../'.PLUGINDIR.'/cf-calendar/images/pencil.png" /></a> <a class="cfcal-day-item-title" href="'.$item['edit'].'">'.$title.'</a>
 					</li>';
 					$i++;
 				}
