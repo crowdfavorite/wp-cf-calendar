@@ -3,7 +3,7 @@
 Plugin Name: CF Calendar 
 Plugin URI: http://crowdfavorite.com 
 Description: Calendar 
-Version: 1.0 
+Version: 1.0.1
 Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
@@ -11,7 +11,7 @@ Author URI: http://crowdfavorite.com
 // ini_set('display_errors', '1'); ini_set('error_reporting', E_ALL);
 
 // Constants
-	define('CFCAL_VERSION', '1.0');
+	define('CFCAL_VERSION', '1.0.1');
 	define('CFCAL_DIR',trailingslashit(realpath(dirname(__FILE__))));
 
 // Includes
