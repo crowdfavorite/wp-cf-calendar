@@ -1,5 +1,9 @@
 # CF Calendar Change Log
 
+# 1.0.1
+
+- Bug fixes
+
 # 1.0
 
 - Initial Release of the Plugin
