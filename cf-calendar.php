@@ -3,7 +3,7 @@
 Plugin Name: CF Calendar 
 Plugin URI: http://crowdfavorite.com 
 Description: Calendar 
-Version: 1.0.1
+Version: 1.1
 Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
@@ -50,7 +50,13 @@ function cfcal_request_handler() {
 			case 'cfcal_day_popup':
 				cfcal_ajax_day_popup($_POST['cfcal_month'], $_POST['cfcal_day'], $_POST['cfcal_year'], $_POST['cfcal_wheight']);
 				break;
+			case 'cfcal_plus':
+				cfcal_ajax_plus_popup($_POST['cfcal_month'], $_POST['cfcal_day'], $_POST['cfcal_year'], $_POST['cfcal_wheight']);
+				break;
 		}
+	}
+	if (!empty($_GET['cf_postdate'])) {
+		add_action('admin_footer', 'cfcal_post_new_js');
 	}
 	
 	// If the calendar hasn't been implemented, implement it now
@@ -76,6 +82,109 @@ function cfcal_admin_css() {
 	echo file_get_contents(CFCAL_DIR.'css/content.css');
 	echo file_get_contents(CFCAL_DIR.'css/popup.css');
 	die();
+}
+
+/**
+ * This function adds JS to the end of the New Post screen that will change the Publish date of the post being edited
+ *
+ * @return void
+ */
+function cfcal_post_new_js() {
+	if (empty($_GET['cf_postdate'])) { return; }
+	
+	$month = date_i18n('m', strtotime($_GET['cf_postdate']));
+	$day = date_i18n('d', strtotime($_GET['cf_postdate']));
+	$year = date_i18n('Y', strtotime($_GET['cf_postdate']));
+?>
+<script type="text/javascript">
+	jQuery(document).ready(function($) {
+		jQuery('#mm').val('<?php echo zeroise($month, 2); ?>');
+		jQuery('#jj').val('<?php echo zeroise($day, 2); ?>');
+		jQuery('#aa').val('<?php echo zeroise($year, 4); ?>');
+		cfcal_updateText();
+
+		function cfcal_updateText() {
+			var attemptedDate, originalDate, currentDate, publishOn, postStatus = $('#post_status'),
+				optPublish = $('option[value=publish]', postStatus), aa = $('#aa').val(),
+				mm = $('#mm').val(), jj = $('#jj').val(), hh = $('#hh').val(), mn = $('#mn').val();
+
+			attemptedDate = new Date( aa, mm - 1, jj, hh, mn );
+			originalDate = new Date( $('#hidden_aa').val(), $('#hidden_mm').val() -1, $('#hidden_jj').val(), $('#hidden_hh').val(), $('#hidden_mn').val() );
+			currentDate = new Date( $('#cur_aa').val(), $('#cur_mm').val() -1, $('#cur_jj').val(), $('#cur_hh').val(), $('#cur_mn').val() );
+
+			if ( attemptedDate.getFullYear() != aa || (1 + attemptedDate.getMonth()) != mm || attemptedDate.getDate() != jj || attemptedDate.getMinutes() != mn ) {
+				$('.timestamp-wrap', '#timestampdiv').addClass('form-invalid');
+				return false;
+			} else {
+				$('.timestamp-wrap', '#timestampdiv').removeClass('form-invalid');
+			}
+
+			if ( attemptedDate > currentDate && $('#original_post_status').val() != 'future' ) {
+				publishOn = postL10n.publishOnFuture;
+				$('#publish').val( postL10n.schedule );
+			} else if ( attemptedDate <= currentDate && $('#original_post_status').val() != 'publish' ) {
+				publishOn = postL10n.publishOn;
+				$('#publish').val( postL10n.publish );
+			} else {
+				publishOn = postL10n.publishOnPast;
+				if ( page )
+					$('#publish').val( postL10n.updatePage );
+				else
+					$('#publish').val( postL10n.updatePost );
+			}
+			if ( originalDate.toUTCString() == attemptedDate.toUTCString() ) { //hack
+				$('#timestamp').html(stamp);
+			} else {
+				$('#timestamp').html(
+					publishOn + ' <b>' +
+					$('option[value=' + $('#mm').val() + ']', '#mm').text() + ' ' +
+					jj + ', ' +
+					aa + ' @ ' +
+					hh + ':' +
+					mn + '</b> '
+				);
+			}
+
+			if ( $('input:radio:checked', '#post-visibility-select').val() == 'private' ) {
+				if ( page )
+					$('#publish').val( postL10n.updatePage );
+				else
+					$('#publish').val( postL10n.updatePost );
+				if ( optPublish.length == 0 ) {
+					postStatus.append('<option value="publish">' + postL10n.privatelyPublished + '</option>');
+				} else {
+					optPublish.html( postL10n.privatelyPublished );
+				}
+				$('option[value=publish]', postStatus).attr('selected', true);
+				$('.edit-post-status', '#misc-publishing-actions').hide();
+			} else {
+				if ( $('#original_post_status').val() == 'future' || $('#original_post_status').val() == 'draft' ) {
+					if ( optPublish.length ) {
+						optPublish.remove();
+						postStatus.val($('#hidden_post_status').val());
+					}
+				} else {
+					optPublish.html( postL10n.published );
+				}
+				if ( postStatus.is(':hidden') )
+					$('.edit-post-status', '#misc-publishing-actions').show();
+			}
+			$('#post-status-display').html($('option:selected', postStatus).text());
+			if ( $('option:selected', postStatus).val() == 'private' || $('option:selected', postStatus).val() == 'publish' ) {
+				$('#save-post').hide();
+			} else {
+				$('#save-post').show();
+				if ( $('option:selected', postStatus).val() == 'pending' ) {
+					$('#save-post').show().val( postL10n.savePending );
+				} else {
+					$('#save-post').show().val( postL10n.saveDraft );
+				}
+			}
+			return true;
+		}
+	});
+</script>
+<?php
 }
 
 function cfcal_admin_menu() {
@@ -201,7 +310,7 @@ function cfcal_day_posts($items = array(), $month = 0, $day = 0, $year = 0) {
 		$day_posts->the_post();
 		
 		$status_class = get_post_status();
-		if ($status_class == 'pending') {
+		if ($status_class == 'pending' || $status_class == 'future') {
 			$status_class = 'draft';
 		}
 		
@@ -229,6 +338,30 @@ function cfcal_day_title($text = '', $month = 0, $day = 0, $year = 0) {
 	return $text;
 }
 add_filter('cfcal-day-title', 'cfcal_day_title', 10, 4);
+
+function cfcal_day_title_new($text = '', $month = 0, $day = 0, $year = 0) {
+	if ($month == 0 || $day == 0 || $year == 0) { return $text; }
+	$items = apply_filters('cfcal-plus-popup', array(), $month, $day, $year);
+	(is_array($items['close'])) ? $item_count = 2 : $item_count = 1;
+	$count = count($items);
+	
+	if ($count > $item_count) {
+		$text = '<div class="cfcal-day-title-plus hide-if-no-js" onclick="cfcal_plus('.$month.', '.$day.', '.$year.', '.$count.', jQuery(this))"><img src="../'.PLUGINDIR.'/cf-calendar/images/add_icon.png" /></div>'.$text;
+	}
+	else {
+		// Make sure we don't try to use the JS functionality for Today's date
+		if ((zeroise($month, 2) == date('m')) && (zeroise($day, 2) == date('d')) && (zeroise($year, 4) == date('Y'))) {
+			$post_new_link = 'window.location = \'post-new.php\'';
+		}
+		else {
+			$post_new_link = 'window.location = \'post-new.php?cf_postdate='.zeroise($year, 4).'-'.zeroise($month, 2).'-'.zeroise($day, 2).'\'';
+		}
+		$text = '<div class="cfcal-day-title-plus hide-if-no-js" onclick="'.$post_new_link.'"><img src="../'.PLUGINDIR.'/cf-calendar/images/add_icon.png" /></div>'.$text;
+	}
+	
+	return $text;
+}
+add_filter('cfcal-day-title', 'cfcal_day_title_new', 20, 4);
 
 // AJAX Popup Functionality For a Single Post
 
@@ -337,7 +470,7 @@ function cfcal_day_popup_posts($content_array, $month, $day, $year) {
 			$day_posts->the_post();
 			
 			$status_class = get_post_status();
-			if ($status_class == 'pending') {
+			if ($status_class == 'pending' || $status_class == 'future') {
 				$status_class = 'draft';
 			}
 			
@@ -372,7 +505,7 @@ function cfcal_post_popup($html, $post_id, $window_height) {
 			$post_status = $post_statuses[get_post_status()];
 			
 			$status_class = get_post_status();
-			if ($status_class == 'pending') {
+			if ($status_class == 'pending' || $status_class == 'future') {
 				$status_class = 'draft';
 			}
 			
@@ -421,7 +554,84 @@ function cfcal_post_popup($html, $post_id, $window_height) {
 }
 add_filter('cfcal_item_popup', 'cfcal_post_popup', 10, 3);
 
+function cfcal_ajax_plus_popup($month = 0, $day = 0, $year = 0, $window_height) {
+	if ($month == 0 || $day == 0 || $year == 0) {
+		$ret = new cfcal_message(array(
+			'success' => false,
+			'html' => '<p>Whoops! No Day Found</p>',
+			'message' => 'month: '.$month.' || day: '.$day.' || year: '.$year
+		));
+	}
+	else {
+		$ret = new cfcal_message(array(
+			'success' => true,
+			'html' => cfcal_plus_popup($month, $day, $year, $window_height),
+			'message' => null
+		));
+	}
+	$ret->send();
+}
 
+function cfcal_plus_popup($month = 0, $day = 0, $year = 0, $window_height) {
+	$plus_items = apply_filters('cfcal-plus-popup', array(), $month, $day, $year);
+	$popup_content = '';
+	
+	if (is_array($plus_items) && !empty($plus_items)) {
+		$first = true;
+		$i = 1;
+		foreach ($plus_items as $key => $item) {
+			if (isset($item['title']) && isset($item['class']) && isset($item['href'])) {
+				$class = '';
+				if ($first) {
+					$class .= ' cfcal-popup-plus-item-first';
+				}
+				if ($i == count($plus_items)) {
+					$class .= ' cfcal-popup-plus-item-last';
+				}
+				$popup_content .= '
+					<div id="'.$key.'-'.$item['id'].'" class="cfcal-popup-plus-item '.$item['class'].$class.'">
+						<a href="'.$item['href'].'">'.$item['title'].'</a>
+					</div>
+				';
+				$first = false;
+				$i++;
+			}
+		}
+	}
+	
+	$html .= '
+	<div id="cfcal-popup" class="cfcal-popup-plus">
+		<div class="cfcal-popup-plus-content" style="max-height:'.floor($window_height).'px; overflow:auto;">
+			'.$popup_content.'
+		</div>
+	</div>
+	';
+	return $html;
+}
+
+function cfcal_plus_popup_post($content_array, $month, $day, $year) {
+	$content_array[] = array(
+		'id' => 'new-post',
+		'title' => __('New Post', 'cfcal'),
+		'class' => 'cfcal-plus-new-post',
+		'href' => 'post-new.php?cf_postdate='.zeroise($year, 4).'-'.zeroise($month, 2).'-'.zeroise($day, 2)
+	);
+	
+	return $content_array;
+}
+add_filter('cfcal-plus-popup', 'cfcal_plus_popup_post', 10, 4);
+
+function cfcal_plus_popup_close($content_array, $month, $day, $year) {
+	$content_array['close'] = array(
+		'id' => 'plus',
+		'title' => __('Close', 'cfcal'),
+		'class' => 'cfcal-popup-plus-close',
+		'href' => '#'
+	);
+
+	return $content_array;
+}
+// add_filter('cfcal-plus-popup', 'cfcal_plus_popup_close', 99, 4);
 
 // Helpers
 

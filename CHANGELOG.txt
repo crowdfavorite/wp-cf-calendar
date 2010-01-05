@@ -1,8 +1,10 @@
 # CF Calendar Change Log
 
-# 1.0.1
+# 1.1
 
-- Bug fixes
+- Adding the + button to the calendar with filterable content for creating new items
+	- + button standard functionality added to create a new post with a Scheduled post date of the date clicked
+- Adding JS to the New Post screen to setup the scheduled post date if the GET variable is in place
 
 # 1.0
 
