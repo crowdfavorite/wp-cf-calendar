@@ -43,7 +43,7 @@ class cfcal_calendar {
 	public function __construct() {
 		add_action('init', array($this, 'request_handler'), 11);
 		
-		wp_enqueue_script('cfcal-admin-js',get_bloginfo('siteurl').'/wp-admin/index.php?cfcal_action=cfcal_admin_js',array('jquery'),CFCAL_VERSION);
+		wp_enqueue_script('cfcal-calendar-admin-js', trailingslashit(get_bloginfo('url')).'?cfcal_action=cfcal_admin_js', array('jquery'), CFCAL_VERSION);
 	}
 	
 	/**
@@ -135,7 +135,7 @@ class cfcal_calendar {
 	}
 	
 	public function request_handler() {
-		if (isset($_GET['cfcal_action'])) {
+		if (!empty($_GET['cfcal_action'])) {
 			switch ($_GET['cfcal_action']) {
 				case 'cfcal_admin_js':
 					$this->js();

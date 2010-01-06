@@ -82,11 +82,6 @@
 			// fix the width and height of the DOMWindow to allow for click-off
 			$('#DOMWindow').css({'height':_contentdiv.height(),'width':_contentdiv.width()});
 
-			// next section of code is obsolete
-			// $(".cfcal-popup-plus-close a").click(function(){
-			// 	$.closeDOMWindow();
-			// 	return false;
-			// });
 			return true;
 		};
 		

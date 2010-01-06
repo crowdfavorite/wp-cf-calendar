@@ -11,7 +11,7 @@ Author URI: http://crowdfavorite.com
 // ini_set('display_errors', '1'); ini_set('error_reporting', E_ALL);
 
 // Constants
-	define('CFCAL_VERSION', '1.0.1');
+	define('CFCAL_VERSION', '1.1');
 	define('CFCAL_DIR',trailingslashit(realpath(dirname(__FILE__))));
 
 // Includes
@@ -55,21 +55,25 @@ function cfcal_request_handler() {
 	if (!empty($_GET['cf_postdate'])) {
 		add_action('admin_footer', 'cfcal_post_new_js');
 	}
-	
-	// If the calendar hasn't been implemented, implement it now
-	if (class_exists('cfcal_calendar') && is_admin()) {
+	if ((!empty($_GET['page']) && $_GET['page'] == 'cf-calendar') || (!empty($_GET['cfcal_action']))) {
 		global $cfcal_calendar;
-		$cfcal_calendar = new cfcal_calendar();
+		// If the calendar hasn't been implemented, implement it now
+		if (class_exists('cfcal_calendar') && !is_a('cfcal_calendar', $cfcal_calendar)) {
+			$cfcal_calendar = new cfcal_calendar();
+		}
 	}
 }
 add_action('init', 'cfcal_request_handler');
 
-wp_enqueue_script('jquery');
-wp_enqueue_script('cfcal_admin_js', trailingslashit(get_bloginfo('url')).'?cf_action=cfcal_admin_js', array('jquery'), CFCAL_VERSION);
-wp_enqueue_style('cfcal-admin-css',	trailingslashit(get_bloginfo('url')).'?cf_action=cfcal_admin_css', array(), CFCAL_VERSION, 'screen');
+if (!empty($_GET['page']) && $_GET['page'] == 'cf-calendar') {
+	wp_enqueue_script('jquery');
+	wp_enqueue_script('cfcal_admin_js', trailingslashit(get_bloginfo('url')).'?cf_action=cfcal_admin_js', array('jquery'), CFCAL_VERSION);
+	wp_enqueue_style('cfcal-admin-css',	trailingslashit(get_bloginfo('url')).'?cf_action=cfcal_admin_css', array(), CFCAL_VERSION, 'screen');
+}
 
 function cfcal_admin_js() {
 	header('Content-type: text/javascript');
+	do_action('cfcal-admin-js');
 	echo file_get_contents(CFCAL_DIR.'js/behavior.js');
 	die();
 }
@@ -571,7 +575,7 @@ function cfcal_plus_content() {
 					$class .= ' cfcal-popup-plus-item-last';
 				}
 				$popup_content .= '
-					<div id="'.$key.'-'.$item['id'].'" class="cfcal-popup-plus-item '.$item['class'].$class.'">
+					<div id="'.$item['id'].'" class="cfcal-popup-plus-item '.$item['class'].$class.'">
 						<a href="'.$item['href'].'">'.$item['title'].'</a>
 					</div>
 				';
@@ -593,7 +597,7 @@ function cfcal_plus_content() {
 
 function cfcal_plus_post($content_array) {
 	$content_array[] = array(
-		'id' => 'new-post',
+		'id' => 'cfcal-plus-new-post',
 		'title' => __('New Post', 'cfcal'),
 		'class' => 'cfcal-plus-new-post',
 		'href' => 'post-new.php?cf_postdate=###YEAR###-###MONTH###-###DAY###'
@@ -614,6 +618,18 @@ function cfcal_plus_close($content_array) {
 	return $content_array;
 }
 // add_filter('cfcal-plus', 'cfcal_plus_close', 99);
+
+function cfcal_plus_close_js() {
+	echo '
+jQuery(function($) {
+	$(".cfcal-popup-plus-close a").live("click", function() {
+		$.closeDOMWindow();
+		return false;
+	});
+});
+	';
+}
+// add_action('cfcal-admin-js', 'cfcal_plus_close_js');
 
 // Helpers
 
@@ -666,30 +682,4 @@ function cfcal_json_decode($json,$array) {
 	}
 }
 
-# TESTING ADDITIONAL LINKS FILTERING 
-
-	function cfcal_custom_link_test($items) {
-		$items[] = array(
-			'id' => 'testing-breakage',
-			'title' => __('Testing','cfcal'),
-			'class' => 'popup-testing-post',
-			'href' => '#'
-		);
-		return $items;
-	}
-	add_filter('cfcal-plus', 'cfcal_custom_link_test', 10);
-
-	function cfcal_js_foot_test() {
-		echo '
-<script type="text/javascript">
-	jQuery(function($) {
-		$(".popup-testing-post a").live("click", function() {
-			alert("hi");
-			return false;
-		});
-	});
-</script>
-		';
-	}
-	add_action('admin_footer','cfcal_js_foot_test',10);
 ?>
