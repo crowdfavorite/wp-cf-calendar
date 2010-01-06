@@ -666,5 +666,30 @@ function cfcal_json_decode($json,$array) {
 	}
 }
 
+# TESTING ADDITIONAL LINKS FILTERING 
 
+	function cfcal_custom_link_test($items) {
+		$items[] = array(
+			'id' => 'testing-breakage',
+			'title' => __('Testing','cfcal'),
+			'class' => 'popup-testing-post',
+			'href' => '#'
+		);
+		return $items;
+	}
+	add_filter('cfcal-plus', 'cfcal_custom_link_test', 10);
+
+	function cfcal_js_foot_test() {
+		echo '
+<script type="text/javascript">
+	jQuery(function($) {
+		$(".popup-testing-post a").live("click", function() {
+			alert("hi");
+			return false;
+		});
+	});
+</script>
+		';
+	}
+	add_action('admin_footer','cfcal_js_foot_test',10);
 ?>

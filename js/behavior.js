@@ -55,7 +55,7 @@
 
 		cfcal_plus = function(month, day, year, num_items, _this) {
 			var html = $('#cfcal-popup-content').html().replace(/###MONTH###/g, month).replace(/###DAY###/g, day).replace(/###YEAR###/g, year);
-			var t_html = "<div id=\"disposible-wapper\">"+html+"</div>";
+			var t_html = "<div id=\"disposible-wapper\">"+html+"</div>";			
 			var h = num_items*40;
 			var top = Math.floor(_this.offset().top)+7;
 			var left = Math.floor(_this.offset().left)+7-100;
@@ -78,11 +78,15 @@
 			if (_contentdiv.height() > h-20) {
 				_contentdiv.css({'height':(h-20) + 'px'});
 			} 
+			
+			// fix the width and height of the DOMWindow to allow for click-off
+			$('#DOMWindow').css({'height':_contentdiv.height(),'width':_contentdiv.width()});
 
-			$(".cfcal-popup-plus-close a").click(function(){
-				$.closeDOMWindow();
-				return false;
-			});
+			// next section of code is obsolete
+			// $(".cfcal-popup-plus-close a").click(function(){
+			// 	$.closeDOMWindow();
+			// 	return false;
+			// });
 			return true;
 		};
 		
