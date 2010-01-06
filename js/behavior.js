@@ -54,58 +54,36 @@
 		};
 
 		cfcal_plus = function(month, day, year, num_items, _this) {
-			var wheight = num_items*40;
+			var html = $('#cfcal-popup-content').html().replace(/###MONTH###/g, month).replace(/###DAY###/g, day).replace(/###YEAR###/g, year);
+			var t_html = "<div id=\"disposible-wapper\">"+html+"</div>";
+			var h = num_items*40;
+			var top = Math.floor(_this.offset().top)+7;
+			var left = Math.floor(_this.offset().left)+7-100;
+			var opts = {
+				windowSourceID:t_html,
+				borderSize:0,
+				windowBGColor:"transparent",
+				windowPadding: 0,
+				height:h,
+				overlayOpacity:0,
+				positionLeft:left,
+				positionTop:top,
+				positionType:'absolute' // centered, anchored, absolute, fixed
+			};
+			$.openDOMWindow(opts);
+			$('#DOMWindow').css('overflow','visible');
 
-			$.post("index.php", {
-				cf_action:"cfcal_plus",
-				cfcal_month:month,
-				cfcal_day:day,
-				cfcal_year:year,
-				cfcal_wheight:wheight
-			}, function(r) {
-				res = eval("("+r+")");
-				if (res.success != false) {
-					var t_html = "<div id=\"disposible-wapper\">"+res.html+"</div>";
-					var w = 200;
-					var h = wheight;
-					var top = Math.floor(_this.offset().top);
-					top += 13;
-					var left = Math.floor(_this.offset().left);
-					
-					var opts = {
-						windowSourceID:t_html,
-						borderSize:0,
-						windowBGColor:"transparent",
-						windowPadding: 0,
-						width:w,
-						height:h,
-						overlay:1,
-						overlayOpacity:"30",
-						positionLeft:left,
-						positionTop:top,
-						positionType:'absolute' // centered, anchored, absolute, fixed
-					};
-					$.openDOMWindow(opts);
-					$('#DOMWindow').css('overflow','visible');
+			// fix the height on browsers that don't honor the max-height css directive
+			var _contentdiv = $('#DOMWindow .cfcal-popup-content');
+			if (_contentdiv.height() > h-20) {
+				_contentdiv.css({'height':(h-20) + 'px'});
+			} 
 
-					// fix the height on browsers that don't honor the max-height css directive
-					var _contentdiv = $('#DOMWindow .cfcal-popup-content');
-					if (_contentdiv.height() > wheight-20) {
-						_contentdiv.css({'height':(wheight-20) + 'px'});
-					} 
-
-					$(".cfcal-popup-plus-close a").click(function(){
-						$.closeDOMWindow();
-						return false;
-					});
-					return true;
-				}
-				else {
-					cfcal_popup_error(res.html, res.message);
-				}
+			$(".cfcal-popup-plus-close a").click(function(){
+				$.closeDOMWindow();
+				return false;
 			});
-			
-			return false;
+			return true;
 		};
 		
 		// Show/Hide JS Functionality

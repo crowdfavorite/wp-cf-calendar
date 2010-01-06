@@ -50,9 +50,6 @@ function cfcal_request_handler() {
 			case 'cfcal_day_popup':
 				cfcal_ajax_day_popup($_POST['cfcal_month'], $_POST['cfcal_day'], $_POST['cfcal_year'], $_POST['cfcal_wheight']);
 				break;
-			case 'cfcal_plus':
-				cfcal_ajax_plus_popup($_POST['cfcal_month'], $_POST['cfcal_day'], $_POST['cfcal_year'], $_POST['cfcal_wheight']);
-				break;
 		}
 	}
 	if (!empty($_GET['cf_postdate'])) {
@@ -210,6 +207,9 @@ function cfcal_calendar() {
 		</div>
 		<?php echo $cfcal_calendar->admin(false, $_GET['month'], $_GET['year']); ?>
 	</div>
+	<div id="cfcal-popup-content">
+		<?php echo cfcal_plus_content(); ?>
+	</div>
 	<?php
 }
 
@@ -341,12 +341,12 @@ add_filter('cfcal-day-title', 'cfcal_day_title', 10, 4);
 
 function cfcal_day_title_new($text = '', $month = 0, $day = 0, $year = 0) {
 	if ($month == 0 || $day == 0 || $year == 0) { return $text; }
-	$items = apply_filters('cfcal-plus-popup', array(), $month, $day, $year);
+	$items = apply_filters('cfcal-plus', array(), $month, $day, $year);
 	(is_array($items['close'])) ? $item_count = 2 : $item_count = 1;
 	$count = count($items);
 	
 	if ($count > $item_count) {
-		$text = '<div class="cfcal-day-title-plus hide-if-no-js" onclick="cfcal_plus('.$month.', '.$day.', '.$year.', '.$count.', jQuery(this))"><img src="../'.PLUGINDIR.'/cf-calendar/images/add_icon.png" /></div>'.$text;
+		$text = '<div class="cfcal-day-title-plus hide-if-no-js" onclick="cfcal_plus(\''.zeroise($month, 2).'\', \''.zeroise($day, 2).'\', \''.zeroise($year, 4).'\', '.$count.', jQuery(this))"><img src="../'.PLUGINDIR.'/cf-calendar/images/add_icon.png" /></div>'.$text;
 	}
 	else {
 		// Make sure we don't try to use the JS functionality for Today's date
@@ -554,26 +554,8 @@ function cfcal_post_popup($html, $post_id, $window_height) {
 }
 add_filter('cfcal_item_popup', 'cfcal_post_popup', 10, 3);
 
-function cfcal_ajax_plus_popup($month = 0, $day = 0, $year = 0, $window_height) {
-	if ($month == 0 || $day == 0 || $year == 0) {
-		$ret = new cfcal_message(array(
-			'success' => false,
-			'html' => '<p>Whoops! No Day Found</p>',
-			'message' => 'month: '.$month.' || day: '.$day.' || year: '.$year
-		));
-	}
-	else {
-		$ret = new cfcal_message(array(
-			'success' => true,
-			'html' => cfcal_plus_popup($month, $day, $year, $window_height),
-			'message' => null
-		));
-	}
-	$ret->send();
-}
-
-function cfcal_plus_popup($month = 0, $day = 0, $year = 0, $window_height) {
-	$plus_items = apply_filters('cfcal-plus-popup', array(), $month, $day, $year);
+function cfcal_plus_content() {
+	$plus_items = apply_filters('cfcal-plus', array());
 	$popup_content = '';
 	
 	if (is_array($plus_items) && !empty($plus_items)) {
@@ -601,7 +583,7 @@ function cfcal_plus_popup($month = 0, $day = 0, $year = 0, $window_height) {
 	
 	$html .= '
 	<div id="cfcal-popup" class="cfcal-popup-plus">
-		<div class="cfcal-popup-plus-content" style="max-height:'.floor($window_height).'px; overflow:auto;">
+		<div class="cfcal-popup-plus-content" style="overflow:auto;">
 			'.$popup_content.'
 		</div>
 	</div>
@@ -609,19 +591,19 @@ function cfcal_plus_popup($month = 0, $day = 0, $year = 0, $window_height) {
 	return $html;
 }
 
-function cfcal_plus_popup_post($content_array, $month, $day, $year) {
+function cfcal_plus_post($content_array) {
 	$content_array[] = array(
 		'id' => 'new-post',
 		'title' => __('New Post', 'cfcal'),
 		'class' => 'cfcal-plus-new-post',
-		'href' => 'post-new.php?cf_postdate='.zeroise($year, 4).'-'.zeroise($month, 2).'-'.zeroise($day, 2)
+		'href' => 'post-new.php?cf_postdate=###YEAR###-###MONTH###-###DAY###'
 	);
 	
 	return $content_array;
 }
-add_filter('cfcal-plus-popup', 'cfcal_plus_popup_post', 10, 4);
+add_filter('cfcal-plus', 'cfcal_plus_post', 10);
 
-function cfcal_plus_popup_close($content_array, $month, $day, $year) {
+function cfcal_plus_close($content_array) {
 	$content_array['close'] = array(
 		'id' => 'plus',
 		'title' => __('Close', 'cfcal'),
@@ -631,7 +613,7 @@ function cfcal_plus_popup_close($content_array, $month, $day, $year) {
 
 	return $content_array;
 }
-// add_filter('cfcal-plus-popup', 'cfcal_plus_popup_close', 99, 4);
+// add_filter('cfcal-plus', 'cfcal_plus_close', 99);
 
 // Helpers
 
