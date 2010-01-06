@@ -57,7 +57,7 @@
 			var html = $('#cfcal-popup-content').html().replace(/###MONTH###/g, month).replace(/###DAY###/g, day).replace(/###YEAR###/g, year);
 			var t_html = "<div id=\"disposible-wapper\">"+html+"</div>";			
 			var h = num_items*40;
-			var top = Math.floor(_this.offset().top)+7;
+			var top = Math.floor(_this.offset().top)-($(window).scrollTop())+7;
 			var left = Math.floor(_this.offset().left)+7-100;
 			var opts = {
 				windowSourceID:t_html,
