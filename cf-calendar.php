@@ -559,6 +559,21 @@ function cfcal_post_popup($html, $post_id, $window_height) {
 add_filter('cfcal_item_popup', 'cfcal_post_popup', 10, 3);
 
 function cfcal_plus_content() {
+	$plus_js_handlers = array(
+		'onblur',
+		'onclick',
+		'ondblclick',
+		'onfocus',
+		'onmousedown',
+		'onmousemove',
+		'onmouseout',
+		'onmouseover',
+		'onmouseup',
+		'onkeydown',
+		'onkeypress',
+		'onkeyup'
+	);
+	
 	$plus_items = apply_filters('cfcal-plus', array());
 	$popup_content = '';
 	
@@ -566,8 +581,22 @@ function cfcal_plus_content() {
 		$first = true;
 		$i = 1;
 		foreach ($plus_items as $key => $item) {
-			if (isset($item['title']) && isset($item['class']) && isset($item['href'])) {
+			if (is_array($item) && !empty($item['title'])) {
+				$additional = '';
+				foreach ($item as $key => $value) {
+					if (in_array($key, $plus_js_handlers)) {
+						$additional .= ' '.$key.'=\''.$value.'\'';
+					}
+				}
+				
+				$href = '#';
+				if (!empty($item['href'])) {
+					$href = $item['href'];
+				}
 				$class = '';
+				if (!empty($item['class'])) {
+					$class .= ' '.$item['class'];
+				}
 				if ($first) {
 					$class .= ' cfcal-popup-plus-item-first';
 				}
@@ -576,7 +605,7 @@ function cfcal_plus_content() {
 				}
 				$popup_content .= '
 					<div id="'.$item['id'].'" class="cfcal-popup-plus-item '.$item['class'].$class.'">
-						<a href="'.$item['href'].'">'.$item['title'].'</a>
+						<a href="'.$href.'"'.$additional.'>'.$item['title'].'</a>
 					</div>
 				';
 				$first = false;
