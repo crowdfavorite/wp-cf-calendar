@@ -90,6 +90,16 @@
 }
 
 .cfcal-popup-plus-content {
+	font-size: .85em;
+}
+.cfcal-popup-plus-content a:link,
+.cfcal-popup-plus-content a:active,
+.cfcal-popup-plus-content a:visited {
+	text-decoration: none;
+}
+.cfcal-popup-plus-content a:hover {
+	color: black;
+	text-decoration: underline;
 }
 
 .cfcal-popup-plus-item {
