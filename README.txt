@@ -18,6 +18,8 @@ The posts displayed in the day will display the post title and a pencil link.  W
 
 The more link, as well as the double paper link next to the day number, will pop open a new light box window that will display more information about the day.  This box will display every post for the day selected.  The list of posts will display the post title and a pencil link.  When a user clicks on the title of the post, the current light box window will close and another one will open with information about the post clicked.  If the user clicks on the pencil link, they will be directed automatically to the post edit screen for the post selected.
 
+The plus button, added to each day, gives users the ability to create new posts with a scheduled date for the date selected.  When clicked this button will direct the browser to the New Post screen and automatically set the publish date to the date selected.
+
 ### Post Layout
 
 The post layout light box will display information about the post.  Information included with posts is Author, Category, Status, Publish Date, Last Modified and Word Count.  An Edit link has been added to the post information screen for easy linking directly to the post edit screen.
