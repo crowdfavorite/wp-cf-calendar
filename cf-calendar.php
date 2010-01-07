@@ -211,7 +211,7 @@ function cfcal_calendar() {
 		</div>
 		<?php echo $cfcal_calendar->admin(false, $_GET['month'], $_GET['year']); ?>
 	</div>
-	<div id="cfcal-popup-content">
+	<div id="cfcal-popup-plus-content-hidden" style="display:none;">
 		<?php echo cfcal_plus_content(); ?>
 	</div>
 	<?php

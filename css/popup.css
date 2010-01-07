@@ -104,6 +104,11 @@
 
 .cfcal-popup-plus-item {
 	padding:2px 4px;
+	background-color:#EDEFFF;
+}
+
+.cfcal-popup-plus-item:hover {
+	background-color:#C9CDF2;
 }
 
 .cfcal-popup-plus-item-first {
@@ -123,16 +128,3 @@
 	border-bottom-left-radius: 6px;
 	border-bottom-right-radius: 6px;
 }
-
-.cfcal-popup-plus-close {
-	background-color:#DFDFDF;
-}
-
-.cfcal-plus-new-post {
-	background-color:#C5EFAF;
-}
-
-
-
-
-
