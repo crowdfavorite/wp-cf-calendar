@@ -19,14 +19,13 @@
 				post_id:_this.attr("id").split('-')[1],
 				cfcal_wheight:wheight-20
 			}, function(r) {
-				res = eval("("+r+")");
-				if (res.success != false) {
-					cfcal_popup(res.html, null, wheight);
+				if (r.success != false) {
+					cfcal_popup(r.html, null, wheight);
 				}
 				else {
-					cfcal_popup_error(res.html, res.message);
+					cfcal_popup_error(r.html, r.message);
 				}
-			});
+			},'json');
 			
 			return false;
 		};
@@ -41,14 +40,13 @@
 				cfcal_year:year,
 				cfcal_wheight:wheight-20
 			}, function(r) {
-				res = eval("("+r+")");
-				if (res.success != false) {
-					cfcal_popup(res.html, null, wheight);
+				if (r.success != false) {
+					cfcal_popup(r.html, null, wheight);
 				}
 				else {
-					cfcal_popup_error(res.html, res.message);
+					cfcal_popup_error(r.html, r.message);
 				}
-			});
+			}, 'json');
 			
 			return false;
 		};
