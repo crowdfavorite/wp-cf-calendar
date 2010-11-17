@@ -3,7 +3,7 @@
 Plugin Name: CF Calendar 
 Plugin URI: http://crowdfavorite.com 
 Description: Calendar 
-Version: 1.1.1
+Version: 1.2
 Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
@@ -11,7 +11,7 @@ Author URI: http://crowdfavorite.com
 // ini_set('display_errors', '1'); ini_set('error_reporting', E_ALL);
 
 // Constants
-	define('CFCAL_VERSION', '1.1.1');
+	define('CFCAL_VERSION', '1.2');
 	define('CFCAL_DIR',trailingslashit(realpath(dirname(__FILE__))));
 
 // Includes
@@ -494,64 +494,56 @@ function cfcal_day_popup_posts($content_array, $month, $day, $year) {
 add_filter('cfcal-day-popup', 'cfcal_day_popup_posts', 10, 4);
 
 function cfcal_post_popup($html, $post_id, $window_height) {
-	global $post;
-	$popup_post = new WP_Query(array(
-		'p' => $post_id,
-		'showposts' => 1
-	));
+	global $post, $authordata;
+
+	$popup_post = get_post($post_id);
+	$post = $popup_post;
+	$post_statuses = get_post_statuses();
+	$post_status = $post_statuses[get_post_status($post_id)];
 	
-	
-	if ($popup_post->have_posts()) {
-		while($popup_post->have_posts()) {
-			$popup_post->the_post();
-			
-			$post_statuses = get_post_statuses();
-			$post_status = $post_statuses[get_post_status()];
-			
-			$status_class = get_post_status();
-			if ($status_class == 'pending' || $status_class == 'future') {
-				$status_class = 'draft';
-			}
-			
-			$html .= '
-			<div class="cfcal-popup-head">
-				<span class="cfcal-popup-close">
-					<a href="#close">Close</a>
-				</span>
-				<h2>'.get_the_time('F d, Y').'</h2>
-			</div>
-			<div class="cfcal-popup-content" style="max-height:'.floor($window_height).'px; overflow:auto;">
-				<div class="cfcal-popup-title cfcal-status-'.$status_class.'" onclick="window.location = \''.get_edit_post_link(get_the_ID(), 'other').'\'">
-					'.get_the_title().'
-				</div>
-				<div class="cfcal-popup-post-info">
-					<div class="author">
-						<span class="description">'.__('Author', 'cfcal').':</span> '.get_the_author().'
-					</div>
-					<div class="categories">
-						<span class="description">'.__('Categories', 'cfcal').':</span> '.get_the_category_list(', ', '', get_the_ID()).'
-					</div>
-					<div class="status">
-						<span class="description">'.__('Status', 'cfcal').':</span> '.$post_status.'
-					</div>
-					<div class="post-date">
-						<span class="description">'.__('Publish Date', 'cfcal').':</span> '.get_the_time('F d, Y').'
-					</div>
-					<div class="post-date">
-						<span class="description">'.__('Last Modified', 'cfcal').':</span> '.mysql2date(__('F d, Y'), $post->post_modified).'
-					</div>
-					<div class="word-count">
-						<span class="description">'.__('Word Count', 'cfcal').':</span> '.str_word_count(strip_tags(get_the_content())).'
-					</div>
-				</div>
-				<div class="cfcal-popup-edit">
-					<a href="'.get_edit_post_link(get_the_ID(), 'other').'">'.__('Edit This Post', 'cfcal').'</a>
-				</div>
-			</div>
-			';
-		}
+	$status_class = get_post_status($post_id);
+	if ($status_class == 'pending' || $status_class == 'future') {
+		$status_class = 'draft';
 	}
 	
+	error_log(print_r($authordata, true));
+	$html .= '
+	<div class="cfcal-popup-head">
+		<span class="cfcal-popup-close">
+			<a href="#close">Close</a>
+		</span>
+		<h2>'.get_the_time('F d, Y', false, $post_id).'</h2>
+	</div>
+	<div class="cfcal-popup-content" style="max-height:'.floor($window_height).'px; overflow:auto;">
+		<div class="cfcal-popup-title cfcal-status-'.$status_class.'" onclick="window.location = \''.get_edit_post_link($post_id, 'other').'\'">
+			'.get_the_title().'
+		</div>
+		<div class="cfcal-popup-post-info">
+			<div class="author">
+				<span class="description">'.__('Author', 'cfcal').':</span> '.get_the_author_meta('display_name', $post->post_author).'
+			</div>
+			<div class="categories">
+				<span class="description">'.__('Categories', 'cfcal').':</span> '.get_the_category_list(', ', '', $post_id).'
+			</div>
+			<div class="status">
+				<span class="description">'.__('Status', 'cfcal').':</span> '.$post_status.'
+			</div>
+			<div class="post-date">
+				<span class="description">'.__('Publish Date', 'cfcal').':</span> '.get_the_time('F d, Y', false, $post_id).'
+			</div>
+			<div class="post-date">
+				<span class="description">'.__('Last Modified', 'cfcal').':</span> '.mysql2date(__('F d, Y'), $popup_post->post_modified).'
+			</div>
+			<div class="word-count">
+				<span class="description">'.__('Word Count', 'cfcal').':</span> '.str_word_count(strip_tags(get_the_content())).'
+			</div>
+		</div>
+		<div class="cfcal-popup-edit">
+			<a href="'.get_edit_post_link($post_id, 'other').'">'.__('Edit This Post', 'cfcal').'</a>
+		</div>
+	</div>
+	';
+
 	wp_reset_query();
 	unset($popup_post);
 	return $html;
