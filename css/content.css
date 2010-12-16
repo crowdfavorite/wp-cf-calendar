@@ -88,6 +88,7 @@ table.cfcal-calendar {
 	border-radius: 4px;
 	cursor:pointer;
 	line-height:15px;
+	height:15px; /* To fix IE8 no wrap issue */
 	margin-bottom:2px;
 	overflow:hidden;
 	white-space:nowrap;
